@@ -1,4 +1,4 @@
-module hello-world
+module hello-world-consumer
 
 go 1.20
 
