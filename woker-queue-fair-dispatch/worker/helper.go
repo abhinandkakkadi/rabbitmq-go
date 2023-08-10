@@ -32,7 +32,7 @@ func connectToMQ() *amqp.Connection {
 func DeclareQueue(ch *amqp.Channel) amqp.Queue {
 
 	q, err := ch.QueueDeclare(
-		"hello", //name
+		"task_queue", //name
 		true,    // durable
 		false,   // delete when unused
 		false,   //exclusive

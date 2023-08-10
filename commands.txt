@@ -1,3 +1,8 @@
 rabbitmqctl list_queues - list all the queues
 
 sudo rabbitmqctl list_queues name messages_ready messages_unacknowledged - list all un acknowledged messages
+
+sudo rabbitmqctl list_exchanges - list exchanges on the server
+
+rabbitmqctl list_bindings - list bindings ( bindings connect exchange with queue)
+

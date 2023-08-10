@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"log"
-	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -27,12 +25,29 @@ func connectToMQ() *amqp.Connection {
 
 }
 
+
+func DeclareExchange(ch *amqp.Channel) {
+
+	err := ch.ExchangeDeclare(
+		"logs",   // name  -- exchange name
+		"fanout",  // type  -- exchange type
+		true,  // durable
+		false,  // auto-deleted
+		false,  // internal
+		false,  // no-wait
+		nil,  // arguments
+	)
+
+	failOnError(err, "Failed to declare an exchange")
+
+}
+
 // Queue have to be declared here
 // We have to make sure that the Queue exist in case if consumer starts before publisher
 func DeclareQueue(ch *amqp.Channel) amqp.Queue {
 
 	q, err := ch.QueueDeclare(
-		"task_queue", //name
+		"", //name -- nameless as 
 		true,    // durable
 		false,   // delete when unused
 		false,   //exclusive
@@ -45,12 +60,27 @@ func DeclareQueue(ch *amqp.Channel) amqp.Queue {
 
 }
 
+func QueueBind(q amqp.Queue,ch *amqp.Channel) {
+
+	err := ch.QueueBind(
+		q.Name, // queue name
+		"",     // routing key
+		"logs", // exchange
+		false,
+		nil,
+)
+failOnError(err, "Failed to bind a queue")
+
+}
+
+
+
 func ConsumeMessage(ctx context.Context, q amqp.Queue, ch *amqp.Channel) {
 
 	msgs, err := ch.Consume(
 		q.Name, //queue
 		"",     // consumer
-		false,  // auto-acknowledgement -- if the worker dies before processing the work - the work (message) will be re queued
+		true,  // auto-acknowledgement -- if the worker dies before processing the work - the work (message) will be re queued
 		false,  // exclusive
 		false,  // no-local
 		false,  // no-wait
@@ -63,17 +93,11 @@ func ConsumeMessage(ctx context.Context, q amqp.Queue, ch *amqp.Channel) {
 
 	go func() {
 		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
-			dotCount := bytes.Count(d.Body, []byte("."))
-			t := time.Duration(dotCount)
-			time.Sleep(t * time.Second)
-			log.Printf("Done")
-			d.Ack(false) // acknowledge a single delivery - once we're done with a task
-			// Using this code, you can ensure that even if you terminate a worker using CTRL+C while it was processing a message, nothing is lost. Soon after the worker terminates, all unacknowledged messages are redelivered.
+			log.Printf(" [x] %s",d.Body)
 		}
 	}()
 
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C ")
-	<-forever
+	log.Printf(" [*] waiting for logs. To exit press CTRL+C")
+	<- forever
 
 }
