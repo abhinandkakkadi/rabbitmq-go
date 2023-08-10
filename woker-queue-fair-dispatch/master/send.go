@@ -1,0 +1,34 @@
+package main
+
+import (
+	"context"
+	"log"
+	"os"
+	"time"
+)
+
+func main() {
+
+	// connect tp service
+	conn := connectToMQ()
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	failOnError(err, "failed to open a channel")
+
+	defer ch.Close()
+
+	// call declare queue to declare a new queue
+	q := DeclareQueue(ch)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// p
+	body := bodyFrom(os.Args)
+
+	PublishMessage(ctx, q, ch, body)
+
+	// push/publish a message to queue
+	log.Printf(" [x] Sent %s\n", body)
+}

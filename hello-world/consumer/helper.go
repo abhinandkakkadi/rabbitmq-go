@@ -49,7 +49,7 @@ func ConsumeMessage(ctx context.Context,q amqp.Queue,ch *amqp.Channel) {
 		msgs, err := ch.Consume(
 			q.Name, //queue
 			"", // consumer
-			true,  // auto-track
+			true,  // auto-acknowledgement
 			false,  // exclusive
 			false,  // no-local
 			false,  // no-wait

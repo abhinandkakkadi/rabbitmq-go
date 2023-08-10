@@ -1,0 +1,2 @@
+In this case all the worker will be getting a task (message) based on load. To make it happen we can set the prefetch count to 1 so that the rabbitMq queue will 
+only push at most one message to a worker at a time
