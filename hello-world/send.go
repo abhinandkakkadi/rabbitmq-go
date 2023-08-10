@@ -2,42 +2,33 @@ package main
 
 import (
 	"context"
+	"log"
 	"time"
 )
 
 func main() {
 
-	conn := connectToDB()
+	// connect tp service
+	conn := connectToMQ()
+	defer conn.Close()
+	
 	ch, err := conn.Channel()
 	failOnError(err, "failed to open a channel")
 
 	defer ch.Close()
 
-	q, err := ch.QueueDeclare(
-		"hello", //name
-		false,   // durable
-		false,   // delete when unused
-		false,   //exclusive
-		false,   //no-wait
-		nil,     //arguments
-	)
-
-	failOnError(err, "Failed to declare a queue")
+	// call declare queue to declare a new queue
+	q := DeclareQueue(ch)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5 *time.Second)
 	defer cancel()
 
+	// p
 	body := "Hello World"
-	err = ch.PublishWithContext(ctx,
-		"",  // exchange
-		q.Name, //routing key
-		false,  //mandatory
-		false,  // immediate
-		amqp.Publishing {
-			ContentType : "text/plain",
-			body
-		}
-	)
+	PublishMessage(ctx,q,ch,body)
 
-
+	// push/publish a message to queue
+	log.Printf(" [x] Sent %s\n",body)
 }
+
+
